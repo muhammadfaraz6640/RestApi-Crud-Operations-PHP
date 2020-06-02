@@ -14,7 +14,8 @@
     <title>Php Crud Using Rest Api</title>
 </head>
 <body>
-    
+    <div id="success-message"></div>
+    <div id="error-message"></div>
     <table width="100%" cellpadding="10px">
         <tr>
             <th>Id</th>
@@ -66,13 +67,57 @@
   </div>
 </div>
 
-<form id="addform">
-    Name : <input type="text" name="" id="">
-    Age : <input type="text" name="" id="">
-    Gender : <input type="text" name="" id="">
-    Class : <input type="text" name="" id="">    
-    <input type="submit" name="" id="add-button">
-</form>
+<!-- <form id="addform">
+    Name : <input type="text" name="name" id="">
+    Age : <input type="text" name="age" id="">
+    Gender : <input type="text" name="gender" id="">
+    Class : <input type="text" name="class" id="">    
+    <input type="submit" name="add" value="add" id="add-button">
+</form> -->
+
+<div class="modal fade" id="modalLoginForm1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">      
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Insert New Record</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="addform" >
+      <div class="modal-body mx-3">
+        <div class="md-form">          
+          <label data-error="wrong" data-success="right" for="defaultForm-email">Name</label>
+          <input type="text" name="name" id="edit-name" class="form-control validate">          
+          
+        </div>
+
+        <div class="md-form">          
+          <label data-error="wrong" data-success="right" for="defaultForm-pass">Age</label>
+          <input type="number" name="age" id="edit-age" class="form-control validate">          
+        </div>
+        <div class="md-form">          
+          <label data-error="wrong" data-success="right" for="defaultForm-pass">Gender</label>
+          <input type="text" name="gender" id="edit-gender" class="form-control validate">          
+        </div>
+        <div class="md-form">          
+          <label data-error="wrong" data-success="right" for="defaultForm-pass">Class</label>
+          <input type="text" name="class" id="edit-class" class="form-control validate">          
+        </div>
+      </div>
+      <div class="modal-footer d-flex justify-content-center">
+        <input value="Insert" class="btn btn-primary" type="submit" id="add-button">        
+      </div>
+    </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="text-center">
+  <a href="" class="btn btn-primary btn-rounded mb-4" data-toggle="modal" data-target="#modalLoginForm1">Insert New Record Here</a>
+</div>
+
 
     <script type="text/javascript">
     
@@ -102,19 +147,76 @@
                 });
             }
             load_data();
+            //function for converting form data to json data
+            function json_data_convert(targetformid)
+            {
+              var arr = $(targetformid).serializeArray();
+              // console.log(arr);
+              //now converting serialize array into js object
+
+              var js_obj = {};
+              for(var i=0;i<arr.length;i++)
+              {
+                if(arr[i].value == false)
+                {
+                  return false;
+                }
+                js_obj[arr[i].name] = arr[i].value;  //name is key and value is value                
+              }
+              // console.log(js_obj);
+              //now convering js object into json format which is our desired for ajax
+
+              var Json_insert_data = JSON.stringify(js_obj);
+              return Json_insert_data;
+            }
+
+            //function for error message
+            function message(message,status){
+              if(status == true){
+                $("#success-message").html(message).slideDown();
+                $("#error-message").slideUp();
+                setTimeout(function(){
+                  $("#success-message").slideUp();
+                },4000);
+              }else if(status == false){
+                $("#error-message").html(message).slideDown();
+                $("#success-message").slideUp();
+                setTimeout(function(){
+                  $("#error-message").slideUp();
+                },4000);
+              }
+            }
 
             //add data
 
-            $("#add-button").on("click",function(e){
-             
-              e.preventDefault(); //default submit features prevent
-              var arr = $("#addform").serializeArray();
-              console.log(arr);
+            $("#add-button").on("click",function(e){             
+              //serailize array conversion
+              e.preventDefault(); //default submit features prevent              
+              var Json_data_func = json_data_convert("#addform");
+              // console.log(Json_data_func);
+              if(Json_data_func == false){
+                message("all feilds are required",false);
+              }
+
+              $.ajax({
+                url : 'http://localhost/RestApiCrud/Api-Insert.php',
+                type : "POST",
+                data : Json_data_func,   
+                success : function(data){
+                  message(data.message,data.status);
+                  if(data.status == true)//data inserted
+                  {
+                    //load data in home page
+                    load_data();
+                    //reset form inputs
+                    $("#addform").trigger("reset");
+                  }
+                }
+              });
             });
 
             //fetch single record
-            $(document).on("click",".edit-btn",function(){
-       //         $("#modalLoginForm").show();
+            $(document).on("click",".edit-btn",function(){       
                 var student_id = $(this).data("eid");
                 var obj = {Sid : student_id};
                 var Json = JSON.stringify(obj);
