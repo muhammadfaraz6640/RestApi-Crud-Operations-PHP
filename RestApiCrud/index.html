@@ -186,7 +186,33 @@
                 },4000);
               }
             }
+		//update record
+            $("#update-button").on("click",function(e){             
+              //serailize array conversion
+              e.preventDefault(); //default submit features prevent              
+              var Json_data_func = json_data_convert("#updateform");
+              console.log("faraz");
+              // console.log(Json_data_func);
+              if(Json_data_func == false){
+                message("all feilds are required",false);
+              }
 
+              $.ajax({
+                url : 'http://localhost/RestApiCrud/Api-Update.php',
+                type : "POST",
+                data : Json_data_func,   
+                success : function(data){
+                  message(data.message,data.status);
+                  if(data.status == true)//data inserted
+                  {
+                    //load data in home page
+                    load_data();
+                    //reset form inputs
+                    $("#updateform").trigger("reset");
+                  }
+                }
+              });
+            });
             //add data
 
             $("#add-button").on("click",function(e){             
