@@ -16,6 +16,10 @@
 <body>
     <div id="success-message"></div>
     <div id="error-message"></div>
+    <div>
+      <a href="" class="btn btn-primary btn-rounded mb-4" data-toggle="modal" data-target="#modalLoginForm1">Insert New Record Here</a>
+      search the record here : <input type="text" name="search" id="searchbar">
+    </div>
     <table width="100%" cellpadding="10px">
         <tr>
             <th>Id</th>
@@ -38,17 +42,17 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <form action="" id="update-form">
+      <form id="updateform">
       <div class="modal-body mx-3">
         <div class="md-form">          
           <label data-error="wrong" data-success="right" for="defaultForm-email">Name</label>
-          <input type="text" id="edit-name" name="name" class="form-control validate">          
+          <input type="text" name="name" id="edit-name" class="form-control validate">          
           <input type="number" name="id" id="edit-id" hidden>          
         </div>
 
         <div class="md-form">          
           <label data-error="wrong" data-success="right" for="defaultForm-pass">Age</label>
-          <input type="number" id="edit-age" name="age" class="form-control validate">          
+          <input type="number" name="age" id="edit-age" class="form-control validate">          
         </div>
         <div class="md-form">          
           <label data-error="wrong" data-success="right" for="defaultForm-pass">Gender</label>
@@ -60,20 +64,13 @@
         </div>
       </div>
       <div class="modal-footer d-flex justify-content-center">
-        <input value="update" class="btn btn-primary" type="submit" id="update-button">                
+        <input value="update" class="btn btn-primary" type="submit" id="update-button">                        
       </div>
     </form>
     </div>
   </div>
 </div>
 
-<!-- <form id="addform">
-    Name : <input type="text" name="name" id="">
-    Age : <input type="text" name="age" id="">
-    Gender : <input type="text" name="gender" id="">
-    Class : <input type="text" name="class" id="">    
-    <input type="submit" name="add" value="add" id="add-button">
-</form> -->
 
 <div class="modal fade" id="modalLoginForm1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
   aria-hidden="true">
@@ -114,15 +111,14 @@
     </div>
   </div>
 </div>
-<div class="text-center">
-  <a href="" class="btn btn-primary btn-rounded mb-4" data-toggle="modal" data-target="#modalLoginForm1">Insert New Record Here</a>
-</div>
+
 
 
     <script type="text/javascript">
     
         $(document).ready(function(){
             function load_data(){
+              $("#load-table").html("");
                 $.ajax({
                     url : 'http://localhost/RestApiCrud/Fetch-api-readall.php',
                     type : "GET",
@@ -147,6 +143,8 @@
                 });
             }
             load_data();
+
+            
             //function for converting form data to json data
             function json_data_convert(targetformid)
             {
@@ -186,7 +184,7 @@
                 },4000);
               }
             }
-		//update record
+            //update record
             $("#update-button").on("click",function(e){             
               //serailize array conversion
               e.preventDefault(); //default submit features prevent              
@@ -213,7 +211,35 @@
                 }
               });
             });
-//delete record
+            //add data
+
+            $("#add-button").on("click",function(e){             
+              //serailize array conversion
+              e.preventDefault(); //default submit features prevent              
+              var Json_data_func = json_data_convert("#addform");
+              // console.log(Json_data_func);
+              console.log("add");
+              if(Json_data_func == false){
+                message("all feilds are required",false);
+              }
+
+              $.ajax({
+                url : 'http://localhost/RestApiCrud/Api-Insert.php',
+                type : "POST",
+                data : Json_data_func,   
+                success : function(data){
+                  message(data.message,data.status);
+                  if(data.status == true)//data inserted
+                  {
+                    //load data in home page
+                    load_data();
+                    //reset form inputs
+                    $("#addform").trigger("reset");
+                  }
+                }
+              });
+            });
+            //delete record
             $(document).on("click",".delete-btn",function(){
               // document.write("delete button working");
               if(confirm("Do you really want to delete data?")){
@@ -236,34 +262,35 @@
                 });
               }
             });
-            //add data
+            //search live from records
+            $("#searchbar").on("keyup",function(){
+                var searched_item = $(this).val();
+                $("#load-table").html("");
 
-            $("#add-button").on("click",function(e){             
-              //serailize array conversion
-              e.preventDefault(); //default submit features prevent              
-              var Json_data_func = json_data_convert("#addform");
-              // console.log(Json_data_func);
-              if(Json_data_func == false){
-                message("all feilds are required",false);
-              }
-
-              $.ajax({
-                url : 'http://localhost/RestApiCrud/Api-Insert.php',
-                type : "POST",
-                data : Json_data_func,   
-                success : function(data){
-                  message(data.message,data.status);
-                  if(data.status == true)//data inserted
-                  {
-                    //load data in home page
-                    load_data();
-                    //reset form inputs
-                    $("#addform").trigger("reset");
+                $.ajax({
+                  url : 'http://localhost/RestApiCrud/Api-Search-ByName.php?search='+searched_item,
+                  type : "GET", //i am getting the data
+                  // data : searched_item,
+                  success : function(data){
+                    if(data.status == false)
+                        {
+                            $("#load-table").append("<tr><td><h2>"+data.message+"</h2></td></tr>")
+                        }
+                        else{
+                            $.each(data,function(key, value){
+                                $("#load-table").append("<tr>"+"<td>"+ value.Sid +"</td>"+
+                                "<td>"+ value.name +"</td>"+
+                                "<td>"+ value.Age +"</td>"+
+                                "<td>"+ value.Gender +"</td>"+
+                                "<td>"+ value.Class +"</td>"+
+                                "<td><button data-toggle='modal' data-target='#modalLoginForm'  class='btn btn-primary edit-btn' data-eid='"+value.Sid+"'>Edit</button></td>"+
+                                "<td><button class='btn btn-primary delete-btn' data-did='"+value.Sid+"'>Delete</button></td>"+
+                                "</tr>");
+                            });
+                        }
                   }
-                }
-              });
+                });
             });
-
             //fetch single record
             $(document).on("click",".edit-btn",function(){       
                 var student_id = $(this).data("eid");
@@ -286,7 +313,11 @@
                 });
 
             });
+            //update record
+        
         });
+
+        
     </script>
 </body>
 </html>

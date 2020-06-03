@@ -5,9 +5,9 @@ header('Access-Control-Allow-Origin: *');
 
 include "Config.php";
 //$desired_data is the array now
-$desired_data = json_decode(file_get_contents("php://input"), true);
-$std_name = $desired_data['Sname'];
-
+// $desired_data = json_decode(file_get_contents("php://input"), true);
+// $std_name = $desired_data['Sname'];
+$std_name = isset($_GET['search']) ? $_GET['search'] : die();
 $query = "SELECT * FROM Student WHERE name LIKE '%{$std_name}%'";
 $result = mysqli_query($conn,$query) or die("SQL Query Faied");
 
