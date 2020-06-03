@@ -139,7 +139,7 @@
                                 "<td>"+ value.Gender +"</td>"+
                                 "<td>"+ value.Class +"</td>"+
                                 "<td><button data-toggle='modal' data-target='#modalLoginForm'  class='btn btn-primary edit-btn' data-eid='"+value.Sid+"'>Edit</button></td>"+
-                                "<td><button class='btn btn-primary' did='"+value.Sid+"'>Delete</button></td>"+
+                                "<td><button class='btn btn-primary delete-btn' data-did='"+value.Sid+"'>Delete</button></td>"+
                                 "</tr>");
                             });
                         }
@@ -212,6 +212,29 @@
                   }
                 }
               });
+            });
+//delete record
+            $(document).on("click",".delete-btn",function(){
+              // document.write("delete button working");
+              if(confirm("Do you really want to delete data?")){
+                var student_id = $(this).data("did");
+                var obj = {Sid : student_id};
+                var Json = JSON.stringify(obj);
+                // console.log(Json);
+                $.ajax({
+                  url : 'http://localhost/RestApiCrud/Api-Delete.php',
+                  type : "POST",
+                  data : Json,
+                  success : function(data)
+                  {
+                    message(data.message,data.status);
+                    if(data.status == true)
+                    {
+                      load_data();
+                    }
+                  }
+                });
+              }
             });
             //add data
 
